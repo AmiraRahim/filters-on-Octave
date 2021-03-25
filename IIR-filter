@@ -1,0 +1,51 @@
+
+[y,fs]=audioread('clean_signal.wav');
+[ynoisy,fs]=audioread('noisy_signal.wav');
+
+sound(ynoisy, fs);
+
+num_samples = 200;
+
+                                                                            //plot spectrum of noisy signal
+X = fft(ynoisy);
+Mag_X = abs(X);
+Mag_X = fftshift(Mag_X);
+Mag_X = (Mag_X / num_samples);
+stem(Mag_X);
+
+                                                                            //plot time wave of noisy signal
+ynoisy = ynoisy(:,1);
+dt = 1/fs;
+t = 0:dt:(length(ynoisy)*dt)-dt;
+plot(t,ynoisy); xlabel('Seconds'); ylabel('Amplitude');
+figure
+plot(psd(spectrum.periodogram,ynoisy,'Fs',fs,'NFFT',length(ynoisy)));
+
+                                                                            //call IIR Butterworth filter
+f_p = 1850;                                                                 //passband frequency
+f_s = 4000;                                                                 //stopband frequency
+A_s = 20;                                                                   //stopband attenuation
+A_p = 1;                                                                    //passband attenuation
+Wn_p = f_p / (fs/2);
+Wn_s = f_s / (fs/2);
+[N, Wc_p] = buttord(Wn_p, Wn_s, A_p, A_s);
+[B, A] = butter(N, Wc_p); 
+ 
+                                                                            //apply filter to noisy signal
+yfiltered = filter(B, A, ynoisy);
+sound(yfiltered, fs);                                                       //listen to the filtered audio
+
+                                                                            //plot spectrum of filtered signal
+Y = fft(yfiltered);
+Mag_Y = abs(Y);
+Mag_Y = fftshift(Mag_Y);
+Mag_Y = (Mag_Y / num_samples);
+stem(Mag_Y);
+
+                                                                            //plot time wave of filtered signal
+yfiltered = yfiltered(:,1);
+dt = 1/fs;
+t = 0:dt:(length(yfiltered)*dt)-dt;
+plot(t,yfiltered); xlabel('Seconds'); ylabel('Amplitude');
+figure
+plot(psd(spectrum.periodogram,yfiltered,'Fs',fs,'NFFT',length(yfiltered)));
