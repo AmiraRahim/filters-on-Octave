@@ -1,0 +1,49 @@
+
+[y,fs]=audioread('clean_signal.wav');                                       //read a clean audio file, call it 'y' with frequency fs
+[ynoisy,fs]=audioread('noisy_signal.wav');                                  //read a noisy audio file, call it 'ynoisy' with frequency fs
+
+sound(ynoisy, fs);                                                          //play the 'ynoisy' sound
+
+num_samples = 200;
+
+                                                                            //plot spectrum of NOISY audio
+X = fft(ynoisy);                                                            //Fast Fourier Transform
+Mag_X = abs(X);
+Mag_X = fftshift(Mag_X);
+Mag_X = (Mag_X / num_samples);
+stem(Mag_X);                                     
+
+                                                                            //plot time wave of NOISY audio
+ynoisy = ynoisy(:,1);
+dt = 1/fs;
+t = 0:dt:(length(ynoisy)*dt)-dt;                                           //time scale
+plot(t,ynoisy); xlabel('Seconds'); ylabel('Amplitude');
+figure
+plot(psd(spectrum.periodogram,ynoisy,'Fs',fs,'NFFT',length(ynoisy)));       //plot the power spectral density
+
+                                                                            //call the FIR filter
+N = 67;                                                                     //number of taps
+fL = 2000;                                                                  //lower frequency
+WnL = fL / (fs/2);                                                          //window
+B = fir1(N, WnL, rectwin(N+1), 'noscale')                                   //filter command
+f_step = fs / num_samples;
+f = -(fs/2) : f_step : (fs/2)-f_step;
+
+                                                                            //apply filter to noisy signal
+yfiltered = filter(B, 1, ynoisy);
+sound(yfiltered, fs)                                                        //listen to the filtered audio
+
+                                                                            //plot spectrum of FILTERED signal
+Y = fft(yfiltered);
+Mag_Y = abs(Y);
+Mag_Y = fftshift(Mag_Y);
+Mag_Y = (Mag_Y / num_samples);
+stem(Mag_Y);
+
+                                                                             //plot time wave of FILTERED audio
+yfiltered = yfiltered(:,1);
+dt = 1/fs;
+t = 0:dt:(length(yfiltered)*dt)-dt;
+plot(t,yfiltered); xlabel('Seconds'); ylabel('Amplitude');
+figure
+plot(psd(spectrum.periodogram,yfiltered,'Fs',fs,'NFFT',length(yfiltered)));
